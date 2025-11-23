@@ -9,6 +9,7 @@ import { format } from 'date-fns';
 import type {DateRange} from 'react-day-picker';
 import { cn } from 'shared-lib';
 import { useTranslation } from 'react-i18next';
+import {useModuleLifecycle} from "../useModuleLifecycle.ts";
 
 const deliveryMetrics = [
     { label: 'Delivery Rate', value: 98.5 },
@@ -23,10 +24,27 @@ const channelData = [
 
 export default function ReportsPage() {
     const { t } = useTranslation();
+    const { on } = useModuleLifecycle('reports');
+
     const [date, setDate] = useState<DateRange | undefined>({
         from: new Date(new Date().setDate(new Date().getDate() - 30)),
         to: new Date(),
     });
+
+    useEffect(() => {
+        const unsubscribe = on('dashboard:filter:changed', (data) => {
+            if (data.type === 'dateRange' && data.value) {
+                // Example: data.value = { from: Date, to: Date }
+                setDate({
+                    from: new Date(data.value.from),
+                    to: new Date(data.value.to),
+                });
+            }
+        });
+
+        return unsubscribe;
+    }, [on]);
+
 
     return (
         <div className="space-y-6 animate-fade-in">
